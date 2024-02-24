@@ -25,7 +25,7 @@ def encode_image(image_path):
 
 
 def play_audio(text):
-    audio = generate(text, voice=os.environ.get("ELEVENLABS_VOICE_ID"))
+    audio = generate(text, voice=os.environ.get("ELEVENLABS_VOICE_ID"), model="eleven_multilingual_v2")
 
     unique_id = base64.urlsafe_b64encode(os.urandom(30)).decode("utf-8").rstrip("=")
     dir_path = os.path.join("narration", unique_id)
@@ -52,6 +52,27 @@ def generate_new_line(base64_image):
         },
     ]
 
+def traduci(text):
+    responseIta = client.chat.completions.create(
+    model="gpt-4",
+    messages=[
+        {
+        "role": "system",
+        "content": "You will be provided with a sentence in English, and your task is to translate it into Italian."
+        },
+        {
+        "role": "user",
+        "content": text
+        }
+    ],
+    temperature=0.7,
+    max_tokens=500,
+    top_p=1
+    )
+
+    response_text_ita = responseIta.choices[0].message.content
+
+    return response_text_ita
 
 def analyze_image(base64_image, script):
     response = client.chat.completions.create(
@@ -60,7 +81,7 @@ def analyze_image(base64_image, script):
             {
                 "role": "system",
                 "content": """
-                You are Sir David Attenborough. Narrate the picture of the human as if it is a nature documentary.
+                You are Alberto Angela. Narrate the picture of the human as if it is a nature documentary.
                 Make it snarky and funny. Don't repeat yourself. Make it short. If I do anything remotely interesting, make a big deal about it!
                 """,
             },
@@ -77,6 +98,9 @@ def main():
     script = []
 
     while True:
+
+        analysis=""
+        tradotto=""
         # path to your image
         image_path = os.path.join(os.getcwd(), "./frames/frame.jpg")
 
@@ -84,13 +108,17 @@ def main():
         base64_image = encode_image(image_path)
 
         # analyze posture
-        print("👀 David is watching...")
+        print("👀 Alberto ti sta guardando...")
         analysis = analyze_image(base64_image, script=script)
 
-        print("🎙️ David says:")
-        print(analysis)
+    #    print("🎙️ Alberto ha pensato in inglese:")
+    #    print(analysis)
 
-        play_audio(analysis)
+        tradotto = traduci(analysis)
+        print("🎙️ Alberto ha d:")
+        print(tradotto)
+
+        play_audio(tradotto)
 
         script = script + [{"role": "assistant", "content": analysis}]
 
